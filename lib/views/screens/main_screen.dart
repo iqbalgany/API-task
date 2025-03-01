@@ -15,6 +15,7 @@ class _MainScreenState extends State<MainScreen> {
   List<UserModel> _users = [];
   bool hasMore = true;
   int _currentPage = 1;
+  List<UserModel> _foundUsers = [];
 
   @override
   void initState() {
@@ -34,6 +35,7 @@ class _MainScreenState extends State<MainScreen> {
     List<UserModel> cachedUser = await UserService().getCachedUsers();
     setState(() {
       _users = cachedUser;
+      _foundUsers = List.from(_users);
     });
   }
 
@@ -49,6 +51,35 @@ class _MainScreenState extends State<MainScreen> {
       }
 
       _users.addAll(users);
+      _foundUsers = List.from(_users);
+    });
+  }
+
+  void _runFilter(String enteredKeyword) {
+    if (enteredKeyword.isEmpty) {
+      setState(() {
+        _foundUsers = List.from(_users);
+      });
+    } else {
+      setState(() {
+        _foundUsers = _users
+            .where(
+              (user) =>
+                  user.firstName.toLowerCase().contains(
+                        enteredKeyword.toLowerCase(),
+                      ) ||
+                  user.lastName.toLowerCase().contains(
+                        enteredKeyword.toLowerCase(),
+                      ),
+            )
+            .toList();
+      });
+    }
+  }
+
+  void resetSearch() {
+    setState(() {
+      _foundUsers = List.from(_users);
     });
   }
 
@@ -65,32 +96,49 @@ class _MainScreenState extends State<MainScreen> {
           title: Text('HOME'),
           centerTitle: true,
         ),
-        body: RefreshIndicator(
-          onRefresh: _fetchUsers,
-          child: ListView.builder(
-            controller: controller,
-            itemCount: _users.length + 1,
-            itemBuilder: (context, index) {
-              if (index < _users.length) {
-                final user = _users[index];
-                return Padding(
-                  padding: EdgeInsets.only(
-                    bottom: index == _users.length - 1 ? 20 : 0,
-                  ),
-                  child: UserCard(user: user),
-                );
-              } else {
-                return Padding(
-                  padding: EdgeInsets.symmetric(vertical: 35),
-                  child: Center(
-                    child: hasMore
-                        ? CircularProgressIndicator()
-                        : Text('No more user to load'),
-                  ),
-                );
-              }
-            },
-          ),
+        body: Column(
+          children: [
+            SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: TextField(
+                onChanged: (value) => _runFilter(value),
+                decoration: InputDecoration(
+                  labelText: 'Search',
+                  suffixIcon: Icon(Icons.search),
+                ),
+              ),
+            ),
+            SizedBox(height: 20),
+            Expanded(
+              child: ListView.builder(
+                controller: controller,
+                itemCount: _foundUsers.length + 1,
+                itemBuilder: (context, index) {
+                  if (index < _foundUsers.length) {
+                    final user = _foundUsers[index];
+                    return Padding(
+                      padding: EdgeInsets.only(
+                        bottom: index == _foundUsers.length - 1 ? 20 : 0,
+                      ),
+                      child: UserCard(
+                        user: user,
+                      ),
+                    );
+                  } else {
+                    return Padding(
+                      padding: EdgeInsets.symmetric(vertical: 35),
+                      child: Center(
+                        child: hasMore
+                            ? CircularProgressIndicator()
+                            : Text('No more user to load'),
+                      ),
+                    );
+                  }
+                },
+              ),
+            ),
+          ],
         ));
   }
 }

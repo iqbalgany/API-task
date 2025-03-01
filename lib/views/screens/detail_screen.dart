@@ -21,7 +21,7 @@ class DetailScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Hero(
-              tag: users.id,
+              tag: "user_avatar_${users.id}",
               transitionOnUserGestures: true,
               child: Container(
                 width: 300,

@@ -21,7 +21,7 @@ class UserCard extends StatelessWidget {
       ),
       child: Hero(
         transitionOnUserGestures: true,
-        tag: user.id,
+        tag: "user_avatar_${user.id}",
         child: Padding(
           padding: const EdgeInsets.fromLTRB(10, 20, 10, 20),
           child: Container(
