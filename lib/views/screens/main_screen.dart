@@ -15,6 +15,8 @@ class _MainScreenState extends State<MainScreen> {
   List<UserModel> _users = [];
   bool hasMore = true;
   int _currentPage = 1;
+  final int _perPage = 8;
+
   List<UserModel> _foundUsers = [];
 
   @override
@@ -40,19 +42,46 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Future<void> _fetchUsers() async {
-    const perPage = 8;
-    List<UserModel> users =
-        await UserService().fetchListUser(_currentPage, perPage);
-    setState(() {
-      _currentPage++;
+    try {
+      List<UserModel> users =
+          await UserService().fetchListUser(_currentPage, _perPage);
+      setState(() {
+        _currentPage++;
 
-      if ((users.length < perPage)) {
-        hasMore = false;
-      }
+        if ((users.length < _perPage)) {
+          hasMore = false;
+        }
 
-      _users.addAll(users);
-      _foundUsers = List.from(_users);
-    });
+        _users.addAll(users);
+        _foundUsers = List.from(_users);
+      });
+    } catch (e) {
+      _showErrorDialog(e.toString());
+    }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Error'),
+          content: Text(
+            message,
+            textAlign: TextAlign.justify,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _fetchUsers();
+              },
+              child: Text('Reload'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _runFilter(String enteredKeyword) {
@@ -75,12 +104,6 @@ class _MainScreenState extends State<MainScreen> {
             .toList();
       });
     }
-  }
-
-  void resetSearch() {
-    setState(() {
-      _foundUsers = List.from(_users);
-    });
   }
 
   @override
